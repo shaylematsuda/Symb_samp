@@ -1,0 +1,15 @@
+
+---
+title: "Data_analysis"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+chunk_output_type: console
+---
+Landscape ITS2 data for ICB symybiont sample paper
+
+```{r}
+load("data/Absolute_analysis_2025.RData") #absolute reads data
+
+```
+
