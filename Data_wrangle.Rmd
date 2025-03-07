@@ -20,7 +20,6 @@ library("ggpubr")
 library(ggplot2)
 library(vegan)
 library(pairwiseAdonis)
-
 library(tidyverse)
  
 load("data/Absolute_2025.RData") #absolute reads data
@@ -39,8 +38,6 @@ coral_Absolute_DIV.prune_nonrare_sd <- as(sample_data(coral_Absolute_DIV.prune),
 coral_DIV_750 <- rarefy_even_depth(coral_Absolute_DIV.prune, sample.size = 750, rngseed = 711)    
 sample_sums(coral_DIV_750) 
 coral_DIV_750.sd <- as(sample_data(coral_DIV_750), "data.frame")
-
-
 ```
 
 Turn subsampled df in to relative abundance: 
@@ -62,18 +59,17 @@ data.ra <- as(sample_data(DIV_RelA), "data.frame") #look at samp data
   samp.DIV_RelA.dist$Location<-as.factor(samp.DIV_RelA.dist$Location)
   samp.DIV_RelA.dist$LocSamp<-as.factor(samp.DIV_RelA.dist$LocSamp)
   samp.DIV_RelA.dist$TagID<-as.factor(samp.DIV_RelA.dist$TagID)
-  samp.DIV_RelA.dist <- samp.DIV_RelA.dist[, -c(1:11,13:20,22:24, 26:27, 29:30)] #remove unneeded cols
-
+  samp.DIV_RelA.dist <- samp.DIV_RelA.dist[, -c(1:11,13:17, 19:20,22:24, 26:27, 29:30)] #remove unneeded cols
 ```
 Adonis2
 ```{r}
-
   #adonis by colony level or proportion D
 library(vegan)
   set.seed(30)
-  vegan::adonis2(DIV_RelA.dist ~ SampLoc, method ="bray",data = samp.DIV_RelA.dist) 
+  PERMANOVA<-vegan::adonis2(DIV_RelA.dist ~ TagID*SampleNum,data = samp.DIV_RelA.dist) 
+summary(PERMANOVA)
 
-  
+#test PropD
   sset.seed(30)
   adonis2(DIV_RelA.dist ~ Prop.D, data = samp.DIV_RelA.dist)
     
