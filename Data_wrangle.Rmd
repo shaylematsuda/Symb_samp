@@ -63,15 +63,26 @@ data.ra <- as(sample_data(DIV_RelA), "data.frame") #look at samp data
 ```
 Adonis2
 ```{r}
-  #adonis by colony level or proportion D
-library(vegan)
-  set.seed(30)
-  PERMANOVA<-vegan::adonis2(DIV_RelA.dist ~ TagID*SampleNum,data = samp.DIV_RelA.dist) 
+bc <- phyloseq::distance(DIV_RelA, method = "bray")
+ data <- as(sample_data(DIV_RelA), "data.frame")
+ vegan::adonis2(bc ~ SampleNum, data = data)
+#Permutation test for adonis under reduced mod
+
+#this output is not correct. it says Model and not TagID
+ set.seed(30)
+  PERMANOVA<-vegan::adonis2(DIV_RelA.dist ~ TagID,data = samp.DIV_RelA.dist) 
+  PERMANOVA
 summary(PERMANOVA)
 
-#test PropD
-  sset.seed(30)
-  adonis2(DIV_RelA.dist ~ Prop.D, data = samp.DIV_RelA.dist)
+#trying location nested, also weird Model output
+PERMANOVA <- vegan::adonis2(DIV_RelA.dist ~ TagID / Location, data = samp.DIV_RelA.dist)
+PERMANOVA
+summary(PERMANOVA)
+
+#This gives the right TagID output but unsure I believe it is working
+adonis2(DIV_RelA.dist ~ TagID, data = samp.DIV_RelA.dist, by = "margin")
+adonis2(DIV_RelA.dist ~ TagID * Location, data = samp.DIV_RelA.dist, by = "margin")
+
     
 # Homogeneity of dispersion test
   betaTagID <- betadisper(DIV_RelA.dist, samp.DIV_RelA.dist$TagID)
@@ -79,26 +90,6 @@ summary(PERMANOVA)
   (betaTagID.HSD <- TukeyHSD(betaTagID)) #do you need? impossible to visualize
   plot(betaTagID.HSD)
 
-#adonis by sample location and colony ID
-  set.seed(30)
-  adonis2(DIV_RelA.dist ~ Location*TagID, data = samp.DIV_RelA.dist)
-    
-     
-# Homogeneity of dispersion test, Location
-  betaTagID <- betadisper(DIV_RelA.dist, samp.DIV_RelA.dist$Location)
-  perm<-permutest(betaTagID, pairwise = T)
-  permutest(betadisper(DIV_RelA.dist, samp.DIV_RelA.dist$Location, type = "centroid")) #sig
-  permutest(betadisper(DIV_RelA.dist, samp.DIV_RelA.dist$TagID, type = "centroid")) #sig
-  permutest(betadisper(DIV_RelA.dist, samp.DIV_RelA.dist$Prop.D, type = "centroid")) #sig
-
-  #adonis by broad location and colony ID
-  set.seed(30)
-  adonis2(DIV_RelA.dist ~ Location, data = samp.DIV_RelA.dist) #not significaant
-
-
-#anova is location a predictor of propD <- does this work?
-    aov.propD = aov(Prop.D ~ TagID*Location, data=samp.DIV_RelA.dist)
-    summary(aov.propD) # only location sig
     
 #plot
 set.seed(30)
@@ -120,9 +111,8 @@ ggplot(scores.ord.DIV_RelA.dist, aes(x = NMDS1, y = NMDS2)) +
   #facet_wrap(~Zoox)
 #ggsave("NMDS_ITS2_allsamps.pdf")  
   
- ### plot by Proportion D ##############3
-
- #Color points by proportion of D
+### plot by Proportion D ##############3
+ #Color points by proportion of D using PCOA
   library(ecodist)
 bray_pcoa <- ecodist::pco(DIV_RelA.dist)
 bray_pcoa_df <- data.frame(pcoa1 = bray_pcoa$vectors[,1],
