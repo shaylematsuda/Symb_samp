@@ -592,6 +592,52 @@ mismatch_counts <- prob %>%
 print(mismatch_counts)
 ```
 
+Bootstrapping: using dom.col.samp which is dominant symb per colony by dom symb per sample
+```{r}
+library(dplyr)
+library(ggplot2)
+
+set.seed(123)  # For reproducibility
+
+# Function to resample different sample sizes and check stability
+resampling_test <- function(prob, TagID, dom.samp, max_samples = 16, n_iter = 1000) {
+  results <- data.frame(SampleSize = integer(), Accuracy = numeric())
+  
+  for (n in 1:max_samples) {
+    accuracy <- replicate(n_iter, {
+      sampled_data <- prob %>%
+        group_by(TagID) %>%
+        sample_n(n, replace = TRUE) %>%
+        summarise(dom.samp.pred = names(sort(table(dom.samp), decreasing = TRUE))[1]) %>%
+        left_join(prob %>% dplyr::select(TagID, dom.col.samp), by = "TagID")  # Compare to true colony dom
+    
+      mean(sampled_data$dom.samp.pred == sampled_data$dom.col.samp, na.rm = TRUE)  # Compute accuracy
+    })
+    
+    results <- rbind(results, data.frame(SampleSize = n, Accuracy = mean(accuracy)))
+  }
+  
+  return(results)
+}
+
+# Run the resampling test
+resampling_results <- resampling_test(prob, "TagID", "dom.samp")
+
+# Plot accuracy vs sample size
+ggplot(resampling_results, aes(x = SampleSize, y = Accuracy)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Number of Samples per Colony", y = "Accuracy of Dominant Symbiont Identification",
+       title = "Effect of Sample Size on Confidence in Dominant Symbiont") +
+  theme_minimal()
+```
+Binomial Model
+```{r}
+#pbinom(q, size, prob, lower.tail = FALSE)
+
+pbinom(5, size = 16, prob = 1, lower.tail = FALSE)
+
+```
 
 
 
